@@ -118,7 +118,7 @@
                     <navigationItem key="navigationItem" id="I0s-Rp-guV">
                         <barButtonItem key="leftBarButtonItem" title="Settings" id="8GD-y8-vXo">
                             <connections>
-                                <segue destination="upH-sX-nG3" kind="presentation" id="CBN-qc-PWd"/>
+                                <segue destination="upH-sX-nG3" kind="presentation" identifier="BusinessesToFilterSegue" id="CBN-qc-PWd"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
@@ -146,13 +146,89 @@
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="1In-wk-Udj">
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <prototypes>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="zHa-lb-AqE">
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="FilterSwitchTableViewCell" id="zHa-lb-AqE" customClass="FilterSwitchTableViewCell" customModule="Yelp" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="28" width="375" height="44"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="zHa-lb-AqE" id="X00-yQ-70m">
                                             <frame key="frameInset" width="375" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MEn-Wa-OFV">
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tAO-tz-whB">
+                                                    <connections>
+                                                        <action selector="onChangeSwitchWithSender:" destination="zHa-lb-AqE" eventType="valueChanged" id="MIZ-cb-Eki"/>
+                                                    </connections>
+                                                </switch>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstAttribute="trailing" secondItem="tAO-tz-whB" secondAttribute="trailing" constant="8" id="Nbp-ke-VUB"/>
+                                                <constraint firstItem="MEn-Wa-OFV" firstAttribute="centerY" secondItem="X00-yQ-70m" secondAttribute="centerY" id="h9w-1Y-ffW"/>
+                                                <constraint firstItem="tAO-tz-whB" firstAttribute="centerY" secondItem="X00-yQ-70m" secondAttribute="centerY" id="hg3-1Y-7tk"/>
+                                                <constraint firstItem="MEn-Wa-OFV" firstAttribute="leading" secondItem="X00-yQ-70m" secondAttribute="leading" constant="8" id="t8A-Em-cof"/>
+                                            </constraints>
                                         </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="filterLabel" destination="MEn-Wa-OFV" id="KIp-aO-Pts"/>
+                                            <outlet property="filterSwitch" destination="tAO-tz-whB" id="6BO-A6-6gG"/>
+                                        </connections>
+                                    </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="FilterCollapseTableViewCell" id="3ab-Dt-GUJ" customClass="FilterCollapseTableViewCell" customModule="Yelp" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="72" width="375" height="44"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="3ab-Dt-GUJ" id="hsK-rz-vmc">
+                                            <frame key="frameInset" width="375" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gKf-K5-lqm">
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="soB-53-2Mb">
+                                                    <state key="normal" title="Collapse"/>
+                                                </button>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="gKf-K5-lqm" firstAttribute="centerY" secondItem="hsK-rz-vmc" secondAttribute="centerY" id="Pt3-AO-0B1"/>
+                                                <constraint firstItem="soB-53-2Mb" firstAttribute="centerY" secondItem="hsK-rz-vmc" secondAttribute="centerY" id="SeU-uK-QaY"/>
+                                                <constraint firstItem="gKf-K5-lqm" firstAttribute="leading" secondItem="hsK-rz-vmc" secondAttribute="leading" constant="8" id="qFd-SR-lRI"/>
+                                                <constraint firstAttribute="trailing" secondItem="soB-53-2Mb" secondAttribute="trailing" constant="8" id="tg4-6I-wls"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="filterLabel" destination="gKf-K5-lqm" id="Kl4-qe-lzy"/>
+                                        </connections>
+                                    </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="FilterSelectTableViewCell" id="bEv-Tw-twv" customClass="FilterSelectTableViewCell" customModule="Yelp" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="116" width="375" height="44"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="bEv-Tw-twv" id="jfK-8M-WNz">
+                                            <frame key="frameInset" width="375" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tEo-Yw-ufn">
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="AJQ-TJ-awl">
+                                                    <state key="normal" title="Select"/>
+                                                </button>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstItem="tEo-Yw-ufn" firstAttribute="leading" secondItem="jfK-8M-WNz" secondAttribute="leading" constant="8" id="DrB-QI-M5p"/>
+                                                <constraint firstItem="tEo-Yw-ufn" firstAttribute="centerY" secondItem="jfK-8M-WNz" secondAttribute="centerY" id="U33-Vn-8Xc"/>
+                                                <constraint firstAttribute="trailing" secondItem="AJQ-TJ-awl" secondAttribute="trailing" constant="8" id="ZhY-5c-GVh"/>
+                                                <constraint firstItem="AJQ-TJ-awl" firstAttribute="centerY" secondItem="jfK-8M-WNz" secondAttribute="centerY" id="ocx-fp-UQJ"/>
+                                            </constraints>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <outlet property="filterLabel" destination="tEo-Yw-ufn" id="NHs-H1-dtP"/>
+                                        </connections>
                                     </tableViewCell>
                                 </prototypes>
                             </tableView>
@@ -166,9 +242,20 @@
                         </constraints>
                     </view>
                     <navigationItem key="navigationItem" id="55H-Qg-9Vj">
-                        <barButtonItem key="leftBarButtonItem" title="Cancel" id="OFe-dV-hZy"/>
-                        <barButtonItem key="rightBarButtonItem" title="Search" id="8OG-wm-bKt"/>
+                        <barButtonItem key="leftBarButtonItem" title="Cancel" id="OFe-dV-hZy">
+                            <connections>
+                                <action selector="onTapCancelButtonWithSender:" destination="np7-xg-myA" id="i5C-yr-GOn"/>
+                            </connections>
+                        </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" title="Search" id="8OG-wm-bKt">
+                            <connections>
+                                <action selector="onTapSearchButtonWithSender:" destination="np7-xg-myA" id="mHB-FJ-jre"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
+                    <connections>
+                        <outlet property="tableView" destination="1In-wk-Udj" id="SEN-tb-TVc"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="sFh-Bb-QmH" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

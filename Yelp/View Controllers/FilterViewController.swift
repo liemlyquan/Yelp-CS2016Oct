@@ -15,6 +15,10 @@ import UIKit
 class FilterViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
+    enum filterCellType: Int {
+        case deal = 0, distance, sort, category
+    }
+    
     weak var delegate: FilterViewControllerDelegate?
     let sortOption:[String] = []
     
@@ -188,12 +192,27 @@ class FilterViewController: UIViewController {
          ["name" : "Wok", "code": "wok"],
          ["name" : "Wraps", "code": "wraps"],
          ["name" : "Yugoslav", "code": "yugoslav"]]
+    var sortByCollapsed:Bool = false
+    var distanceCollapsed:Bool = false
+    var categoryState:[Bool] = []
+    var dealState:Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.delegate = self
         tableView.dataSource = self
         tableView.rowHeight = 44
+        categoryState = Array<Bool>(repeating: false, count: categories.count)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        for index in 0..<categories.count {
+            if let code = categories[index]["code"] {
+                if (YelpSearchSettings.sharedInstance.categories.contains(code)){
+                    categoryState[index] = true
+                }
+            }
+        }
     }
     
     override func didReceiveMemoryWarning() {
@@ -201,44 +220,129 @@ class FilterViewController: UIViewController {
     }
     
     @IBAction func onTapCancelButton(sender: UIBarButtonItem){
-        
+        dismiss(animated: true, completion: nil)
     }
     
     @IBAction func onTapSearchButton(sender: UIBarButtonItem){
-        delegate?.updateSettings!(self)
+        let settings = YelpSearchSettings.sharedInstance
+        YelpSearchSettings.sharedInstance.categories = getSelectedCategories()
+        delegate?.updateSettings?(self)
+        self.dismiss(animated: true, completion: nil)
+    }
+    
+    func getSelectedCategories() -> [String] {
+        var selectedCategories:[String] = []
+        for index in 0..<categories.count {
+            if categoryState[index] == true {
+                if let code = categories[index]["code"] {
+                    selectedCategories.append(code)
+                }
+                
+            }
+        }
+        return selectedCategories
     }
 }
 
 extension FilterViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch section {
-        case 0:
-            return 1
-        case 1:
-            return sortOption.count
-        case 2:
-            return categories.count
-        default:
-            return 0
+        let cellType = filterCellType.init(rawValue: section)!
+        switch cellType {
+        case .deal: return 1
+        case .distance: return 0
+        case .sort: return 0
+        case .category: return categories.count
+        }
+    }
+    
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        let cellType = filterCellType.init(rawValue: section)!
+        switch cellType {
+            case .deal: return ""
+            case .distance: return "Distance"
+            case .sort: return "Sort by"
+            case .category: return "Category"
         }
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        return 3
+        return 4
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let section = indexPath.section
         let row = indexPath.row
-        return UITableViewCell()
-//        switch section {
-//            case 0:
-//                let cell = tableView.dequeueReusableCell(withIdentifier: "FilterDealTableViewCell")
-//            case 1: break
-//            default: break
-//            
-//        }
-        
+        let cellType = filterCellType.init(rawValue: section)!
+
+        switch cellType {
+            case .deal:
+                let cell = tableView.dequeueReusableCell(withIdentifier: "FilterSwitchTableViewCell") as! FilterSwitchTableViewCell
+                cell.filterLabel.text = "Offering a deal"
+                cell.filterSwitch.isOn = dealState
+                cell.delegate = self
+                return cell
+            case .distance:
+                switch distanceCollapsed {
+                case true:
+                    let cell = tableView.dequeueReusableCell(withIdentifier: "FilterCollapseTableViewCell") as! FilterCollapseTableViewCell
+                    cell.collapseLabel.text = "Auto"
+                    return cell
+                case false:
+                    let cell = tableView.dequeueReusableCell(withIdentifier: "FilterSelectTableViewCell") as! FilterSelectTableViewCell
+                    return cell
+            }
+            case .sort:
+                switch sortByCollapsed {
+                case true:
+                    let cell = tableView.dequeueReusableCell(withIdentifier: "FilterCollapseTableViewCell") as! FilterCollapseTableViewCell
+                    cell.collapseLabel.text = "Best match"
+                    return cell
+                case false:
+                    let cell = tableView.dequeueReusableCell(withIdentifier: "FilterSelectTableViewCell") as! FilterSelectTableViewCell
+                    return cell
+            }
+            case .category:
+                let cell = tableView.dequeueReusableCell(withIdentifier: "FilterSwitchTableViewCell") as! FilterSwitchTableViewCell
+                if let name = categories[row]["name"] {
+                    cell.filterLabel.text = name
+                }
+                cell.filterSwitch.isOn = categoryState[row]
+                cell.delegate = self
+                return cell
+        }        
     }
 }
+
+extension FilterViewController: FilterSwitchTableViewCellDelegate {
+    func switchDidChange(_ filterSwitchTableViewCell: FilterSwitchTableViewCell) {
+        guard let indexPath = tableView.indexPath(for: filterSwitchTableViewCell),
+                let cellType = filterCellType.init(rawValue: indexPath.section) else {
+                return
+        }
+        switch cellType {
+            case .deal:
+                dealState = !dealState
+            case .category:
+                let row = indexPath.row
+                categoryState[row] = !categoryState[row]
+            default: break
+        }
+    }
+}
+
+extension FilterViewController: FilterCollapseTableViewCellDelegate {
+    func collapseButtonDidTap(_ filterCollapseTableViewCell: FilterCollapseTableViewCell) {
+        guard let indexPath = tableView.indexPath(for: filterCollapseTableViewCell),
+            let cellType = filterCellType.init(rawValue: indexPath.section) else {
+                return
+        }
+        switch cellType {
+            case .distance: break
+            case .sort: break
+            default: break
+        }
+    }
+}
+
+

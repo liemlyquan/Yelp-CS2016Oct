@@ -38,30 +38,41 @@ class BusinessesViewController: UIViewController {
     }
     
     func doSearch(_ query: String? = "Thai"){
-        print("query \(query)")
+        self.businesses = []
         let categories = YelpSearchSettings.sharedInstance.categories
         let deals = YelpSearchSettings.sharedInstance.deals
 //        let sortMode = YelpSearchSettings.sharedInstance.
         
         if let query = query {
-            Business.search(with: query) { (businesses: [Business]?, error: Error?) in
+//            Business.search(with: query) { (businesses: [Business]?, error: Error?) in
+//                if let businesses = businesses {
+//                    self.businesses = businesses
+//                    self.tableView.reloadData()
+//                }
+//            }
+            
+            
+            Business.search(with: query, sort: .distance , categories: YelpSearchSettings.sharedInstance.categories, deals: true) { (businesses: [Business]?, error: Error?) in
                 if let businesses = businesses {
                     self.businesses = businesses
                     self.tableView.reloadData()
+                    
+                    
                 }
             }
         }
         
-        // Example of Yelp search with more search options specified
-        /*
-         Business.search(with: "Restaurants", sort: .Distance, categories: ["asianfusion", "burgers"], deals: true) { (businesses: [Business]?, error: Error?) in
-         if let businesses = businesses {
-             self.businesses = businesses
-         
+//        Example of Yelp search with more search options specified
 
-             }
-         }
-         */
+ 
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "BusinessesToFilterSegue" {
+            if let nvc = segue.destination as? UINavigationController, let filterVC = nvc.topViewController as? FilterViewController {
+                filterVC.delegate = self
+            }
+        }
     }
 }
     
@@ -92,5 +103,11 @@ extension BusinessesViewController: UISearchBarDelegate {
 
             })
         }
+    }
+}
+
+extension BusinessesViewController: FilterViewControllerDelegate {
+    func updateSettings(_ searchViewController: FilterViewController) {
+        doSearch(searchBar.text)
     }
 }
