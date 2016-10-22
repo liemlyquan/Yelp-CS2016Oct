@@ -193,9 +193,10 @@ class FilterViewController: UIViewController {
          ["name" : "Wraps", "code": "wraps"],
          ["name" : "Yugoslav", "code": "yugoslav"]]
     var sortByCollapsed:Bool = false
-    var distanceCollapsed:Bool = false
+    var distance: Double = 0
     var categoryState:[Bool] = []
     var dealState:Bool = false
+    var sortByOption:YelpSortMode = .bestMatched
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -213,6 +214,9 @@ class FilterViewController: UIViewController {
                 }
             }
         }
+        distance = YelpSearchSettings.sharedInstance.distance
+        dealState = YelpSearchSettings.sharedInstance.deals
+        sortByOption = YelpSearchSettings.sharedInstance.sortBy
     }
     
     override func didReceiveMemoryWarning() {
@@ -225,7 +229,10 @@ class FilterViewController: UIViewController {
     
     @IBAction func onTapSearchButton(sender: UIBarButtonItem){
         let settings = YelpSearchSettings.sharedInstance
-        YelpSearchSettings.sharedInstance.categories = getSelectedCategories()
+        settings.categories = getSelectedCategories()
+        settings.deals = dealState
+        settings.distance = distance
+        settings.sortBy = sortByOption
         delegate?.updateSettings?(self)
         self.dismiss(animated: true, completion: nil)
     }
@@ -250,8 +257,8 @@ extension FilterViewController: UITableViewDelegate, UITableViewDataSource {
         let cellType = filterCellType.init(rawValue: section)!
         switch cellType {
         case .deal: return 1
-        case .distance: return 0
-        case .sort: return 0
+        case .distance: return 1
+        case .sort: return sortByCollapsed ? 3 : 1
         case .category: return categories.count
         }
     }
@@ -283,23 +290,30 @@ extension FilterViewController: UITableViewDelegate, UITableViewDataSource {
                 cell.delegate = self
                 return cell
             case .distance:
-                switch distanceCollapsed {
-                case true:
-                    let cell = tableView.dequeueReusableCell(withIdentifier: "FilterCollapseTableViewCell") as! FilterCollapseTableViewCell
-                    cell.collapseLabel.text = "Auto"
-                    return cell
-                case false:
-                    let cell = tableView.dequeueReusableCell(withIdentifier: "FilterSelectTableViewCell") as! FilterSelectTableViewCell
-                    return cell
-            }
+                let cell = tableView.dequeueReusableCell(withIdentifier: "FilterSliderTableViewCell") as! FilterSliderTableViewCell
+                cell.slider.value = Float(distance)
+                cell.sliderIndicatorLabel.text = String(format: "%.0f m", distance)
+                cell.delegate = self
+                return cell
             case .sort:
                 switch sortByCollapsed {
-                case true:
-                    let cell = tableView.dequeueReusableCell(withIdentifier: "FilterCollapseTableViewCell") as! FilterCollapseTableViewCell
-                    cell.collapseLabel.text = "Best match"
-                    return cell
                 case false:
+                    let cell = tableView.dequeueReusableCell(withIdentifier: "FilterCollapseTableViewCell") as! FilterCollapseTableViewCell
+                    cell.collapseLabel.text = sortByOption.description
+                    cell.delegate = self
+                    return cell
+                case true:
                     let cell = tableView.dequeueReusableCell(withIdentifier: "FilterSelectTableViewCell") as! FilterSelectTableViewCell
+                    
+                    cell.selectLabel.text = YelpSortMode(rawValue: indexPath.row)?.description
+                    if sortByOption == YelpSortMode(rawValue: indexPath.row) {
+                        cell.selectButton.setImage(#imageLiteral(resourceName: "checked-checkbox"), for: .normal)
+                    } else {
+                        cell.selectButton.setImage(#imageLiteral(resourceName: "unchecked-checkbox"), for: .normal)
+                        
+                    }
+                    cell.delegate = self
+                    
                     return cell
             }
             case .category:
@@ -313,6 +327,7 @@ extension FilterViewController: UITableViewDelegate, UITableViewDataSource {
         }        
     }
 }
+
 
 extension FilterViewController: FilterSwitchTableViewCellDelegate {
     func switchDidChange(_ filterSwitchTableViewCell: FilterSwitchTableViewCell) {
@@ -333,16 +348,28 @@ extension FilterViewController: FilterSwitchTableViewCellDelegate {
 
 extension FilterViewController: FilterCollapseTableViewCellDelegate {
     func collapseButtonDidTap(_ filterCollapseTableViewCell: FilterCollapseTableViewCell) {
-        guard let indexPath = tableView.indexPath(for: filterCollapseTableViewCell),
-            let cellType = filterCellType.init(rawValue: indexPath.section) else {
-                return
-        }
-        switch cellType {
-            case .distance: break
-            case .sort: break
-            default: break
-        }
+        sortByCollapsed = !sortByCollapsed
+        tableView.reloadSections([filterCellType.sort.rawValue], with: .automatic)
     }
 }
 
+extension FilterViewController: FilterSliderTableViewCellDelegate {
+    func sliderDidChange(_ filterSliderTableViewCell: FilterSliderTableViewCell, newValue: Float) {
+        distance = floor(Double(newValue))
+    }
+}
 
+extension FilterViewController: FilterSelectTableViewCellDelegate {
+    func selectButtonDidTap(_ filterSelectTableViewCell: FilterSelectTableViewCell) {
+        guard let indexPath = tableView.indexPath(for: filterSelectTableViewCell) else {
+            return
+        }
+        let row = indexPath.row
+        if let option = YelpSortMode(rawValue: row) {
+            sortByOption = option
+        }
+        sortByCollapsed = !sortByCollapsed
+        tableView.reloadSections([filterCellType.sort.rawValue], with: .automatic)
+
+    }
+}

@@ -27,7 +27,7 @@ class FilterSelectTableViewCell: UITableViewCell {
         super.setSelected(selected, animated: animated)
     }
     
-    @IBAction func onTapCollapseButton(sender: UIButton){
+    @IBAction func onTapSelectButton(sender: UIButton){
         delegate?.selectButtonDidTap?(self)
     }
 }

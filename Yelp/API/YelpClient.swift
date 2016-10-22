@@ -8,6 +8,7 @@
 
 import AFNetworking
 import BDBOAuth1Manager
+import SVProgressHUD
 
 // You can register for Yelp API keys here: http://www.yelp.com/developers/manage_api_keys
 let yelpConsumerKey = "vxKwwcR_NMQ7WaEiQBK_CA"
@@ -17,6 +18,14 @@ let yelpTokenSecret = "mqtKIxMIR4iBtBPZCmCLEb-Dz3Y"
 
 enum YelpSortMode: Int {
     case bestMatched = 0, distance, highestRated
+    
+    var description: String {
+        switch self {
+        case .bestMatched: return "Best matched"
+        case .distance: return "Distance"
+        case .highestRated: return "Highest rated"
+        }
+    }
 }
 
 class YelpClient: BDBOAuth1RequestOperationManager {
@@ -45,15 +54,13 @@ class YelpClient: BDBOAuth1RequestOperationManager {
         self.requestSerializer.saveAccessToken(token)
     }
 
-    func search(with term: String, completion: @escaping ([Business]?, Error?) -> ()) -> AFHTTPRequestOperation {
-        return search(with: term, sort: nil, categories: nil, deals: nil, completion: completion)
-    }
 
-    func search(with term: String, sort: YelpSortMode?, categories: [String]?, deals: Bool?, completion: @escaping ([Business]?, Error?) -> ()) -> AFHTTPRequestOperation {
+    func search(with term: String, sort: YelpSortMode?, categories: [String]?, deals: Bool?, radiusFilter: Double?, completion: @escaping ([Business]?, Error?) -> ()) -> AFHTTPRequestOperation {
         // For additional parameters, see http://www.yelp.com/developers/documentation/v2/search_api
-
+        SVProgressHUD.show()
         // Default the location to San Francisco
-        var parameters: [String : AnyObject] = ["term": term as AnyObject, "ll": "37.785771,-122.406165" as AnyObject]
+        print(YelpSearchSettings.sharedInstance.location)
+        var parameters: [String : AnyObject] = ["term": term as AnyObject, "ll": YelpSearchSettings.sharedInstance.location as AnyObject]
 
         if sort != nil {
             parameters["sort"] = sort!.rawValue as AnyObject?
@@ -66,16 +73,21 @@ class YelpClient: BDBOAuth1RequestOperationManager {
         if deals != nil {
             parameters["deals_filter"] = deals! as AnyObject?
         }
+        if let radius = radiusFilter {
+            parameters["radius_filter"] = radius as AnyObject
+        }
 
 
         return self.get("search", parameters: parameters, success: { (operation: AFHTTPRequestOperation, response: Any) in
             if let response = response as? NSDictionary {
                 let dictionaries = response["businesses"] as? [NSDictionary]
                 if dictionaries != nil {
+                    SVProgressHUD.dismiss()
                     completion(Business.businesses(array: dictionaries!), nil)
                 }
             }
             }, failure: { (operation: AFHTTPRequestOperation?, error: Error) in
+                SVProgressHUD.dismiss()
                 completion(nil, error)
         })!
     }

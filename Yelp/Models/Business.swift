@@ -57,10 +57,8 @@ class Business: NSObject {
             categories = nil
         }
 
-        let distanceMeters = dictionary["distance"] as? NSNumber
-        if distanceMeters != nil {
-            let milesPerMeter = 0.000621371
-            distance = String(format: "%.2f mi", milesPerMeter * distanceMeters!.doubleValue)
+        if let distanceMeters = dictionary["distance"] as? NSNumber {
+            distance = String(format: "%.0f m", distanceMeters.doubleValue)
         } else {
             distance = nil
         }
@@ -84,11 +82,8 @@ class Business: NSObject {
         return businesses
     }
 
-    class func search(with term: String, completion: @escaping ([Business]?, Error?) -> ()) {
-        YelpClient.shared().search(with: term, completion: completion)
-    }
 
-    class func search(with term: String, sort: YelpSortMode?, categories: [String]?, deals: Bool?, completion: @escaping ([Business]?, Error?) -> ()) -> () {
-        YelpClient.shared().search(with: term, sort: sort, categories: categories, deals: deals, completion: completion)
+    class func search(with term: String, sort: YelpSortMode?, categories: [String]?, deals: Bool?, radiusFilter: Double, completion: @escaping ([Business]?, Error?) -> ()) -> () {
+        YelpClient.shared().search(with: term, sort: sort, categories: categories, deals: deals, radiusFilter: radiusFilter, completion: completion)
     }
 }

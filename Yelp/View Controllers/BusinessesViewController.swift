@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreLocation
 
 class BusinessesViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
@@ -16,12 +17,17 @@ class BusinessesViewController: UIViewController {
     let searchDelay:Double  = 0.5
     var inProgress:Bool = false
     var time:DispatchTime = .now()
+    let manager = CLLocationManager()
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
         initDelegate()
-        initUI()
-        doSearch()
+        requestLocation()
+
+        
+        
+
     }
 
     
@@ -29,6 +35,8 @@ class BusinessesViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         searchBar.delegate = self
+        manager.delegate = self
+
     }
     
     func initUI(){
@@ -37,22 +45,28 @@ class BusinessesViewController: UIViewController {
         navigationItem.titleView = searchBar
     }
     
+    func requestLocation(){
+        switch (CLLocationManager.authorizationStatus()) {
+        case .authorizedWhenInUse:
+            manager.startUpdatingLocation()
+
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        default: break
+        }
+        
+    }
+    
     func doSearch(_ query: String? = "Thai"){
         self.businesses = []
-        let categories = YelpSearchSettings.sharedInstance.categories
-        let deals = YelpSearchSettings.sharedInstance.deals
-//        let sortMode = YelpSearchSettings.sharedInstance.
+        let settings = YelpSearchSettings.sharedInstance
+        let categories = settings.categories
+        let deals = settings.deals
+        let distance = settings.distance
+        let sortByMode = settings.sortBy
         
         if let query = query {
-//            Business.search(with: query) { (businesses: [Business]?, error: Error?) in
-//                if let businesses = businesses {
-//                    self.businesses = businesses
-//                    self.tableView.reloadData()
-//                }
-//            }
-            
-            
-            Business.search(with: query, sort: .distance , categories: YelpSearchSettings.sharedInstance.categories, deals: true) { (businesses: [Business]?, error: Error?) in
+            Business.search(with: query, sort: sortByMode , categories: categories, deals: deals, radiusFilter: distance) { (businesses: [Business]?, error: Error?) in
                 if let businesses = businesses {
                     self.businesses = businesses
                     self.tableView.reloadData()
@@ -61,10 +75,6 @@ class BusinessesViewController: UIViewController {
                 }
             }
         }
-        
-//        Example of Yelp search with more search options specified
-
- 
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -111,3 +121,21 @@ extension BusinessesViewController: FilterViewControllerDelegate {
         doSearch(searchBar.text)
     }
 }
+
+extension BusinessesViewController: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        var locValue:CLLocationCoordinate2D = manager.location!.coordinate
+        YelpSearchSettings.sharedInstance.location = "\(locValue.latitude),\(locValue.longitude)"
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print(error.localizedDescription)
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        initUI()
+        doSearch()
+    }
+}
+
+
